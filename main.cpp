@@ -13,7 +13,6 @@ struct node{
     int weight;
     char c;
     bool leaf; 
-    pthread_mutex_t lock;
 };
 struct wrapperArg{
     string road;
@@ -170,7 +169,7 @@ node * BuildHuffmanTree(priority_queue<node*,vector<node*>,Compare>& q){
         cur->left = right;
         cur->right =  NULL;
         cur->leaf = false;
-        pthread_mutex_init(&cur->lock,NULL);
+
     }else{
         node * left;
         left = q.top(); q.pop();
@@ -180,7 +179,7 @@ node * BuildHuffmanTree(priority_queue<node*,vector<node*>,Compare>& q){
         cur->left = left;
         cur->right = right;
         cur->leaf = false;
-        pthread_mutex_init(&cur->lock,NULL);
+
     }
     if (q.empty()) break;
     q.push(cur);
@@ -208,8 +207,6 @@ void *ConcurrentDecompress(void * arg){
     wrapperArg cur = *((wrapperArg*)arg);
     int i=0;
      
-    pthread_mutex_lock(&cur.head->lock);
-    
     node* head = (node*)cur.head;
     
     
@@ -217,28 +214,21 @@ void *ConcurrentDecompress(void * arg){
         
         if (cur.road[i]=='0'){
             
-            pthread_mutex_unlock(&head->lock);
-            pthread_mutex_lock(&head->left->lock);
+
             head = head->left;
         }else{
              if (cur.road[i]=='1'){
-                
-                pthread_mutex_unlock(&head->lock);
-                pthread_mutex_lock(&head->right->lock);
+
                    head = head->right;
             }
         }
         i++;
         
     }
-    pthread_mutex_unlock(&head->lock);
+
     
         char k = head->c;
-        
-        
-       
-        
-       
+    
     for(int j=0;j<cur.places.size();j++){
         
         (*cur.result)[cur.places[j]] = k;
